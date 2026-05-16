@@ -10,15 +10,30 @@ const normalizeBaseUrl = (baseUrl) => {
     return "";
   }
 
+  let normalizedUrl = baseUrl;
+
   if (
     typeof window !== "undefined" &&
     window.location.protocol === "https:" &&
     baseUrl.startsWith("http://")
   ) {
-    return baseUrl.replace(/^http:\/\//, "https://");
+    normalizedUrl = baseUrl.replace(/^http:\/\//, "https://");
   }
 
-  return baseUrl;
+  try {
+    const parsedUrl = new URL(normalizedUrl);
+
+    if (
+      parsedUrl.hostname.endsWith("vercel.app") &&
+      !parsedUrl.pathname.replace(/\/$/, "").endsWith("/api")
+    ) {
+      parsedUrl.pathname = `${parsedUrl.pathname.replace(/\/$/, "")}/api`;
+    }
+
+    return parsedUrl.toString().replace(/\/$/, "");
+  } catch {
+    return normalizedUrl;
+  }
 };
 
 const api = axios.create({
